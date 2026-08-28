@@ -1,4 +1,5 @@
 from django.db.models import Count, F
+from datetime import date as dt_date
 from rest_framework import viewsets
 
 from cinema.models import (
@@ -117,7 +118,8 @@ class MovieSessionViewSet(viewsets.ModelViewSet):
         movie = self.request.query_params.get("movie")
 
         if date:
-            queryset = queryset.filter(show_time=date)
+            year, month, day = (int(part) for part in date.split("-"))
+            queryset = queryset.filter(show_time__date=dt_date(year, month, day))
 
         if movie:
             queryset = queryset.filter(movie__id=movie)
