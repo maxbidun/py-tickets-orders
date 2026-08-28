@@ -93,6 +93,23 @@ class OrderSerializer(serializers.ModelSerializer):
         model = Order
         fields = ("id", "created_at", "tickets")
 
+    def validate_tickets(self, tickets):
+        seen = set()
+        for ticket in tickets:
+            key = (ticket["row"], ticket["seat"], ticket["movie_session"].pk)
+            if key in seen:
+                raise serializers.ValidationError("Ticket already exists")
+            seen.add(key)
+
+            if Ticket.objects.filter(
+                row=ticket["row"],
+                seat=ticket["seat"],
+                movie_session=ticket["movie_session"],
+            ).exists():
+                raise serializers.ValidationError("Ticket already exists")
+
+        return tickets
+
     def create(self, validated_data):
         with transaction.atomic():
             ticket_data = validated_data.pop("tickets")
